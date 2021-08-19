@@ -1,0 +1,76 @@
+<footer class="footer">
+    <div class="container">
+        <div class="footer-middle text-center">
+            <div class="widget">
+                <ul class="widget-body">
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                </ul>
+            </div>
+            <div class="social-links">
+                <a href="#" class="social-link social-facebook fab fa-facebook-f"></a>
+                <a href="#" class="social-link social-twitter fab fa-twitter"></a>
+                <a href="#" class="social-link social-linkedin fab fa-linkedin-in"></a>
+            </div>
+        </div>
+        <!-- End of FooterMiddle -->
+        <div class="footer-bottom d-block text-center">
+            <p class="copyright">ECommerce &copy; 2021. All Rights Reserved</p>
+        </div>
+        <!-- End of FooterBottom -->
+    </div>
+</footer>
+<!-- End of Footer -->
+</div>
+
+<!-- Scroll Top -->
+<a id="scroll-top" href="#top" title="Top" role="button" class="scroll-top"><i class="d-icon-arrow-up"></i></a>
+
+<!-- MobileMenu -->
+<div class="mobile-menu-wrapper">
+    <div class="mobile-menu-overlay">
+    </div>
+    <!-- End of Overlay -->
+    <a class="mobile-menu-close" href="#"><i class="d-icon-times"></i></a>
+    <!-- End of CloseButton -->
+    <div class="mobile-menu-container scrollable">
+        <form action="#" class="input-wrapper">
+            <input type="text" class="form-control" name="search" autocomplete="off"
+                placeholder="Search your keyword..." required />
+            <button class="btn btn-search" type="submit">
+                <i class="d-icon-search"></i>
+            </button>
+        </form>
+        <!-- End of Search Form -->
+        <ul class="mobile-menu mmenu-anim">
+            <li>
+                <a href="demo6.html">Home</a>
+            </li>
+            <li>
+                <a href="javascript:void(0)">Categories</a>
+                <ul>
+                    {% if categories %}
+                        {% for item in categories %}
+                            <li><a href="element-products.html">{{ item.name }}</a></li>
+                        {% endfor %}
+                    {% endif %}
+                </ul>
+            </li>
+            <li><a href="">Account</a></li>
+        </ul>
+        <!-- End of MobileMenu -->
+    </div>
+</div>
+
+<!-- Plugins JS File -->
+<script src="{{url_for('static', filename='user/vendor/jquery/jquery.min.js')}}"></script>
+<script src="{{url_for('static', filename='user/vendor/elevatezoom/jquery.elevatezoom.min.js')}}"></script>
+<script src="{{url_for('static', filename='user/vendor/magnific-popup/jquery.magnific-popup.min.js')}}"></script>
+
+<script src="{{url_for('static', filename='user/vendor/owl-carousel/owl.carousel.min.js')}}"></script>
+<script src="{{url_for('static', filename='user/vendor/imagesloaded/imagesloaded.pkgd.min.js')}}"></script>
+<script src="{{url_for('static', filename='user/vendor/isotope/isotope.pkgd.min.js')}}"></script>
+<!-- Main JS File -->
+<script src="{{url_for('static', filename='user/js/main.min.js')}}"></script>
+</body>
+
+</html>

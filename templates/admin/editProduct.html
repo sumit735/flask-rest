@@ -1,0 +1,124 @@
+{% include "admin/includes/header.html" %}
+<!-- DataTables -->
+<link rel="stylesheet"
+    href="{{url_for('static', filename='admin/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css')}}">
+<link rel="stylesheet"
+    href="{{url_for('static', filename='admin/plugins/datatables-responsive/css/responsive.bootstrap4.min.css')}}">
+<link rel="stylesheet"
+    href="{{url_for('static', filename='admin/plugins/datatables-buttons/css/buttons.bootstrap4.min.css')}}">
+<link rel="stylesheet" href="https://cdn.rawgit.com/sachinchoolur/lightgallery.js/master/dist/css/lightgallery.css"  />
+<script src="https://cdn.rawgit.com/sachinchoolur/lightgallery.js/master/dist/js/lightgallery.js" ></script>
+<script src="https://cdn.rawgit.com/sachinchoolur/lg-zoom.js/master/dist/lg-zoom.js"></script>
+<!-- Main Sidebar Container -->
+{% include "admin/includes/sidebar.html" %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+            <div class="col-md-12">
+                <div class="card card-secondary mb-4">
+                    <div class="card-header">
+                        <h3 class="card-title">{{activePage}}</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if error  %}
+                            <p class="col-md-6 alert alert-danger">{{ error }}</p>
+                        {% endif %}
+                        {% if success  %}
+                            <p class="col-md-6 alert alert-success">{{ success }}</p>
+                        {% endif %}
+                        <form method="POST" enctype="multipart/form-data">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="inputName">Product Name</label>
+                                        <input required type="text" value="{{ product.name }}" name="productName" placeholder="Enter Product Name" id="inputName" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="cat">Choose Category</label>
+                                        <select required class="form-control" name="cat_id" id="cat">
+                                            <option selected value="">Select Category Of Product</option>
+                                            {% if categories %}
+                                                {% for item in categories %}
+                                                    <option {{ "selected" if product.category_id == item.id }} value="{{item.id}}">{{ item.name }}</option>
+                                                {% endfor %}
+                                            {% endif %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="catImg">Images</label>
+                                        <input type="file" class="form-control" multiple="multiple" name="catImg" accept="image/*" id="catImg">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="price">Product Price</label>
+                                        <input required type="number" value="{{ product.price }}" min="1" name="price" id="price" placeholder="Enter Product Price" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="stock">Product Stock</label>
+                                        <input required type="number" value="{{ product.stock }}" name="stock" min="1" id="stock" placeholder="Enter Product Stock" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="">Edit Product</label><br>
+                                    <input type="submit" class="btn btn-info" value="Edit Product">
+                                </div>
+                            </div>
+                            
+                        </form>
+
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+                <div class="card card-secondary mt-4">
+                    <div class="card-header">
+                        <h3 class="card-title">View Product Images</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <div id="gallery" class="col-sm-12 mb-3">
+                            {% set imageList = product.image.split(',') %}
+                            {% for image in imageList[:-1] %}
+                                <a href="{{url_for('static', filename=image)}}" class="mr-4 mb-2" data-lg-size="1600-2400">
+                                    <img alt=".." src="{{url_for('static', filename=image)}}" class="mb-4" style="width: 100px; height: 100px;" />
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content -->
+</div>
+<!-- /.content-wrapper -->
+
+<!-- Main Footer -->
+
+{% include "admin/includes/footer.html" %}
+<script>
+    lightGallery(document.getElementById('gallery'), {
+		thumbnail: true,
+	});
+</script>

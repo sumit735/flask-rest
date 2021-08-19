@@ -1,0 +1,146 @@
+{% include "user/includes/header.html" %}
+    
+{% include "user/includes/navbar.html" %}
+        
+        <!-- End of Header -->
+
+        <main class="main">
+            <div class="page-content">
+                <section
+                    class="intro-slider owl-carousel owl-theme row owl-dot-inner animation-slider owl-nav-arrow cols-1 appear-animate"
+                    data-owl-options="{
+                    'items': 1,
+                    'nav': false,
+                    'loop': false,
+                    'dots': false,
+                    'autoplay': false,
+                    'responsive': {
+                        '1360': {
+                            'nav': true
+                        }
+                    }
+                }">
+                    <div class="intro-slide1 banner banner-fixed" style="background-color: #f6f6f6">
+                        <figure>
+                            <img src="{{url_for('static', filename='user/images/demos/demo6/slides/1.jpg')}}" alt="slide" width="1903" height="650" />
+                        </figure>
+                        <div class="container">
+                            <div class="banner-content y-50">
+                                <div class="slide-animate" data-animation-options="{
+                                    'name': 'fadeInUpShorter',
+                                    'duration': '1s'
+                                }">
+                                    <h4 class="banner-subtitle text-uppercase text-grey mb-2">Best Seller</h4>
+                                    <h3 class="banner-title font-weight-bold ls-m">Power bank with built in wireless
+                                        charge</h3>
+                                    <a href="#" class="btn btn-primary btn-link btn-underline">Shop Electronics<i
+                                            class="d-icon-arrow-right"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="intro-slide2 banner banner-fixed" style="background-color: #5A5957;">
+                        <figure class="intro-slide2-image">
+                            <div class="slide-animate" data-animation-options="{'name': 'fadeIn'}">
+                                <img src="{{url_for('static', filename='user/images/demos/demo6/slides/2.png')}}" alt="Clock" width="391" height="401" />
+                            </div>
+                        </figure>
+                        <div class="container">
+                            <div class="banner-content y-50 ml-lg-auto">
+                                <div class="slide-animate" data-animation-options="{
+                                    'name': 'fadeInRightShorter',
+                                    'duration': '1s'
+                                }">
+                                    <h4 class="banner-subtitle text-primary text-uppercase">New Design</h4>
+                                    <h3 class="banner-title text-white font-weight-bold ls-m">Stunning original design
+                                        new wooden clock</h3>
+                                    <a href="#" class="btn btn-white btn-link btn-underline">Shop Essentials<i
+                                            class="d-icon-arrow-right"></i></a>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </section>
+                <section class="product-wrapper mb-10 pb-8 appear-animate">
+                    <div class="container">
+                        
+                        <div class="row grid products-grid mb-2 mt-4" id="products-grid" data-grid-options="{
+                            'masonry': {
+                                'columnWidth': ''
+                            }
+                        }">
+                            {% for product in products %}
+                                {% set imageList = product['Products'].image.split(',') %}
+                                {% set productId = product['Products'].id %}
+                                <div class="col-md-3 col-sm-4 col-6 grid-item electronics essentials">
+                                    <div class="product text-center">
+                                        <figure class="product-media" style="background-color: #f9f9f9;">
+                                            <a href="{{ url_for('viewProduct', slug = product['Products'].slug) }}">
+                                                <img src="{{url_for('static', filename=imageList[0])}}" alt="product" width="280"
+                                                    height="315">
+                                            </a>
+                                            <div class="product-action">
+                                                <a href="javascript:void(0)" onclick="addToCart('{{ productId }}');" class="btn-product addToCart{{ productId }}" title="Click To Add To Cart">Add To Cart</a>
+                                            </div>
+                                        </figure>
+                                        <div class="product-details">
+                                            <div class="product-cat">
+                                                <a href="shop-grid-3cols.html">{{ product['categories'].name }}</a>
+                                            </div>
+                                            <h3 class="product-name">
+                                                <a href="{{ url_for('viewProduct', slug = product['slug']) }}">{{ product['Products'].name }}</a>
+                                            </h3>
+                                            <div class="product-price">
+                                                <span class="price">&#8377; {{ product['Products'].price }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                            
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+        <!-- End of Main -->
+
+{% include "user/includes/footer.html" %}
+<script>
+	const addToCart = (productId) => {
+		let quantity = $('.prodQuantity').val();
+		$.ajax({
+			url: "{{url_for('addToCart')}}",
+			type: 'POST',
+			dataType: 'json',
+			contentType: 'application/json',
+			data: JSON.stringify({
+				'product_id': productId,
+				'quantity': quantity
+			}),
+			beforeSend: function() {
+				$(`.addToCart${productId}`).prop('disabled', true)
+				$(`.addToCart${productId}`).val('Please Wait.');
+			},
+			statusCode: {
+				401: function() { 
+					window.location.href = "{{ url_for('login') }}";
+				}
+			},
+			success: function (data) {
+				$(`.addToCart${productId}`).removeProp('disabled')
+				$(`.addToCart${productId}`).val('Add To Cart');
+				console.log(data);
+				if(data.cartItems) {
+					$('.cartCount').html(data.cartItems)
+				}
+			},
+			error: function (data) {
+				$(`.addToCart${productId}`).removeProp('disabled')
+				$(`.addToCart${productId}`).val('Add To Cart');
+				console.log(data);
+			}
+		})
+	};
+</script>

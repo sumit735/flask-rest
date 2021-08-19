@@ -1,0 +1,157 @@
+{% include "user/includes/header.html" %}
+<style>
+    .text-danger {
+        color: red;
+    }
+    .text-success {
+        color: #27ae60;
+    }
+    .btn-dark:disabled {
+        border-color: #95a5a6;
+        background-color: #95a5a6;
+        cursor: not-allowed;  
+    }
+    .swal2-popup {
+        font-size: 1.6rem !important;
+    }
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% include "user/includes/navbar.html" %}
+        <main class="main">
+            
+            <div class="page-content mt-6 pb-2 mb-10">
+                <div class="container">
+                    <div class="login-popup">
+                        <div class="form-box">
+                            <div class="tab tab-nav-simple tab-nav-boxed form-tab">
+                                <ul class="nav nav-tabs nav-fill align-items-center border-no justify-content-center mb-5" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active border-no lh-1 ls-normal" href="#register">Register</a>
+                                    </li>
+                                </ul>
+                                <div class="tab-content">
+                                    {% with messages = get_flashed_messages(with_categories=true) %}
+                                        {% if messages %}
+                                            {% for category, message in messages %}
+                                                <p class="text-{{ category }}">{{ message }}</p>
+                                            {% endfor %}
+                                        {% endif %}
+                                    {% endwith %}
+                                    {% if error  %}
+                                        <p class="text-danger">{{ error }}</p>
+                                    {% endif %}
+                                    <div class="tab-pane active" id="register">
+                                        <form action="#">
+                                            <div class="form-group">
+                                                <input type="text" min="3" max="20" class="form-control" id="name" name="fname" placeholder="Enter Your Name*"
+                                                    required />
+                                            </div>
+                                            <div class="form-group">
+                                                <input type="number" min="10" max="10"class="form-control" id="mobile" name="mobile" placeholder="Enter Your Mobile Number*"
+                                                    required />
+                                            </div>
+                                            <div class="form-group">
+                                                <input type="email" class="form-control" id="register-email" name="email" placeholder="Your Email address *"
+                                                    required />
+                                            </div>
+                                            <div class="form-group">
+                                                <input type="password" class="form-control" id="register-password" name="password" placeholder="Password *"
+                                                    required />
+                                            </div>
+                                            <div class="form-group row">
+                                                <div class="col-md-6">
+                                                    <button class="btn btn-dark btn-block btn-rounded verifyBtn" onclick="verifyMobile()" type="button">Verify Mobile</button>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <button disabled class="btn btn-dark btn-block btn-rounded registerBtn" type="submit">Register</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+{% include "user/includes/footer.html" %}
+<script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+<script>
+    var notyf = new Notyf({
+        position: { x: 'right', y: 'top' },
+        dismissible: true
+    });
+    function verifyMobile() {
+        let mobile = $('#mobile').val();
+        if(mobile && mobile.length == 10) {
+            $.ajax({
+                url: 'api/verify/mobile/',
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                  'mobile': mobile
+                }),
+                beforeSend: function() {
+                    $('.verifyBtn').attr('disabled', true)
+                    $('.verifyBtn').val('Please Wait.');
+                },
+                success: function(data) {
+                    console.log(data);
+                    $('.verifyBtn').removeAttr('disabled');
+                    Swal.fire({
+                        title: 'Enter OTP',
+                        input: 'text',
+                        inputAttributes: {
+                          autocapitalize: 'off'
+                        },
+                        confirmButtonText: 'Verify OTP',
+                        confirmButtonColor: '#222222',
+                        showLoaderOnConfirm: true,
+                        preConfirm: (otp) => {
+                            $.ajax({
+                                url: 'api/verify/otp',
+                                type: 'POST',
+                                dataType: 'json',
+                                contentType: 'application/json',
+                                data: JSON.stringify({
+                                  'otp': otp
+                                }),
+                                success: function (data) {
+                                    console.log(data);
+                                    $('#mobile').attr('disabled', true)
+                                    $('.registerBtn').removeAttr('disabled');
+                                    $('.verifyBtn').attr('disabled', true)
+                                    notyf.success(data.message)
+                                },
+                                error: function(data) {
+                                    console.log(data);
+                                    $('.verifyBtn').removeAttr('disabled')
+                                    notyf.error(data.responseJSON ? data.responseJSON.message : "Something Went Wrong.")
+                                }
+                            })
+                        },
+                        backdrop: true,
+                        allowOutsideClick: () => !Swal.isLoading()
+                    })
+                },
+                error: function(data) {
+                    $('.verifyBtn').removeAttr('disabled');
+                    Swal.fire({
+                        icon: 'error',
+                        confirmButtonColor: '#222222',
+                        text: data.responseJSON.message || "something went wrong"
+                    })
+                }
+            })
+        } else {
+            Swal.fire({
+                icon: 'error',
+                confirmButtonColor: '#222222',
+                text: "Please Enter A Valid Mobile Number"
+            })
+        }
+    }
+</script>

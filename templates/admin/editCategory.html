@@ -1,0 +1,98 @@
+{% include "admin/includes/header.html" %}
+<!-- DataTables -->
+<link rel="stylesheet"
+    href="{{url_for('static', filename='admin/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css')}}">
+<link rel="stylesheet"
+    href="{{url_for('static', filename='admin/plugins/datatables-responsive/css/responsive.bootstrap4.min.css')}}">
+<link rel="stylesheet"
+    href="{{url_for('static', filename='admin/plugins/datatables-buttons/css/buttons.bootstrap4.min.css')}}">
+<!-- Main Sidebar Container -->
+{% include "admin/includes/sidebar.html" %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1 class="m-0">Dashboard</h1>
+                </div><!-- /.col -->
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="javascript:void(0)">Home</a></li>
+                        <li class="breadcrumb-item active">{{ activePage }}</li>
+                    </ol>
+                </div><!-- /.col -->
+            </div><!-- /.row -->
+        </div><!-- /.container-fluid -->
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+            <div class="col-md-12">
+                <div class="card card-secondary">
+                    <div class="card-header">
+                        <h3 class="card-title">{{ activePage }}</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if error  %}
+                            <p class="col-md-6 alert alert-danger">{{ error }}</p>
+                        {% endif %}
+                        {% if success  %}
+                            <p class="col-md-6 alert alert-success">{{ success }}</p>
+                        {% endif %}
+                        {% if singleCat == ''  %}
+                            <p class="col-md-6 alert alert-danger">No Category Found</p>
+                        {% else %}
+                        <form method="POST" enctype="multipart/form-data">
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="inputName">Category Name</label>
+                                        <input required value="{{singleCat.name}}" type="text" name="catName" id="inputName" class="form-control">
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label for="">Default Image:</label>
+                                    <img src="{{url_for('static', filename='uploads/'+singleCat.image)}}"alt="image" class="img-responsive img-rounded">
+                                </div>
+                            </div>
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <p class="alert alert-warning">Dont Choose Another Image If You Want To Keep Existing One.</p>
+                                    <div class="form-group">
+                                        <label for="catImg">Image</label>
+                                        <input type="file" class="form-control" name="catImg" accept="image/*" id="catImg">
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            
+                            
+                            
+                            
+                            <input type="submit" class="btn btn-primary" value="Edit Category">
+                        </form>
+                        {% endif %}
+
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content -->
+</div>
+<!-- /.content-wrapper -->
+
+<!-- Main Footer -->
+
+{% include "admin/includes/footer.html" %}

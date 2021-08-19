@@ -1,0 +1,94 @@
+<style>
+    .counter {
+        position: absolute;
+        left: 11px;
+        top: 5px;
+        text-align: center;
+        border-radius: 7px;
+        width: 18px;
+        height: 18px;
+        background-color: #FFA372;
+        border: 1px solid #fff;
+        font-weight: 400;
+        color: #f0f0f0;
+        line-height: 16px;
+        font-size: 12px;
+    }
+</style>
+<header class="header">
+    <div class="header-middle sticky-header fix-top sticky-content has-center">
+        <div class="container">
+            <div class="header-left">
+                <a href="#" class="mobile-menu-toggle">
+                    <i class="d-icon-bars2"></i>
+                </a>
+                <nav class="main-nav">
+                    <ul class="menu menu-active-underline">
+                        <li class="{{ 'active' if active == 'home' else '' }}">
+                            <a href="{{ url_for('home') }}">Home</a>
+                        </li>
+                        <!-- End of Dropdown -->
+                        <li class="{{ 'active' if active == 'categories' else '' }}">
+                            <a href="javascript:void(0)">Categories</a>
+                            <ul>
+                                {% if categories %}
+                                    {% for item in categories %}
+                                        <li><a href="element-products.html">{{ item.name }}</a></li>
+                                    {% endfor %}
+                                {% endif %}
+                            </ul>
+                        </li>
+                        {% if cartCount is defined and cartCount|length %}
+                            <li class="{{ 'active' if active == 'account' else '' }}">
+                                <a href="{{ url_for('home') }}">Account</a>
+                            </li>
+                            
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            <div class="header-center">
+                <a href="demo6.html" class="logo">
+                    <img src="{{url_for('static', filename='logo.png')}}" alt="logo" width="153" height="44" />
+                </a>
+            </div>
+            <div class="header-right">
+                {% if cartCount is defined and cartCount|length %}
+                    <div class="dropdown cart-dropdown cart-offcanvas">
+                        <a href="#">
+                            <span class="cart-label d-lg-show">
+                                <span class="cart-name"><i class="fas fa-shopping-cart"></i></span>
+                                <span class="fa fa-stack-1x counter cartCount">{{ cartCount }}</span>
+                            </span>
+                        </a>
+                    </div>
+                    <a class="mr-4" href="{{ url_for('logout') }}">
+                        <span class="cart-label d-lg-show">
+                            <span class="cart-name"><i style="margin-left: 1.5rem; margin-top: 0.5rem; font-size: 2.2rem;" class="fas fa-sign-out-alt"></i></span>
+                        </span>
+                    </a>
+                {% else %}
+                    <a class="mr-4" href="{{ url_for('login') }}">Login</a>
+                    <a class="mr-4" href="{{ url_for('signup') }}">Register</a>
+                {% endif %}
+                <!-- End of Login -->
+                
+
+                <div class="header-search hs-toggle mobile-search">
+                    <a href="#" class="search-toggle">
+                        <i class="d-icon-search"></i>
+                    </a>
+                    <form action="#" class="input-wrapper">
+                        <input type="text" class="form-control" name="search" autocomplete="off"
+                            placeholder="Search your keyword..." required />
+                        <button class="btn btn-search" type="submit">
+                            <i class="d-icon-search"></i>
+                        </button>
+                    </form>
+                </div>
+                <!-- End of Header Search -->
+            </div>
+        </div>
+
+    </div>
+</header>

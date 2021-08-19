@@ -1,0 +1,139 @@
+{% include "admin/includes/header.html" %}
+<!-- DataTables -->
+<link rel="stylesheet"
+    href="{{url_for('static', filename='admin/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css')}}">
+<link rel="stylesheet"
+    href="{{url_for('static', filename='admin/plugins/datatables-responsive/css/responsive.bootstrap4.min.css')}}">
+<link rel="stylesheet"
+    href="{{url_for('static', filename='admin/plugins/datatables-buttons/css/buttons.bootstrap4.min.css')}}">
+<!-- Main Sidebar Container -->
+{% include "admin/includes/sidebar.html" %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <!-- Main content -->
+    <div class="content mt-4">
+        <div class="container-fluid">
+            <div class="col-md-12">
+                <div class="card card-secondary">
+                    <div class="card-header">
+                        <h3 class="card-title">Add Category</h3>
+                    </div>
+                    <div class="card-body">
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                            {% if messages %}
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        <span>{{ message }}</span>
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                        <span aria-hidden="true">×</span>
+                                        </button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                        {% endwith %}
+                        {% if error  %}
+                            <p class="alert alert-danger">{{ error }}</p>
+                        {% endif %}
+                        {% if success  %}
+                            <p class="alert alert-success">{{ success }}</p>
+                        {% endif %}
+                        <form method="POST" enctype="multipart/form-data">
+                            <div class="form-group">
+                                <label for="inputName">Category Name</label>
+                                <input required type="text" name="catName" id="inputName" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="catImg">Image</label>
+                                <input required type="file" class="form-control" name="catImg" accept="image/*" id="catImg">
+                            </div>
+                            <input type="submit" class="btn btn-primary" value="Add Category">
+                        </form>
+
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+                
+                <div class="card card-secondary">
+                    <div class="card-header">
+                        <h3 class="card-title">View Categories</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <table id="example1" class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Category Name</th>
+                                    <th>Image</th>
+                                    <th>Created At</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in categories %}
+                                    <tr>
+                                        <td>{{ item.id }}</td>
+                                        <td>{{ item.name }}</td>
+                                        <td><img src="{{url_for('static', filename='uploads/'+item.image)}}" alt="image" style="width: 60px; height: 50px;"></td>
+                                        <td>{{ item.created_at }}</td>
+                                        <td>
+                                            <a href="{{url_for('editCategory', cat_id=item.id)}}" class="btn btn-secondary btn-sm">Update</a>
+                                            <a onclick="return warning()" href="{{url_for('deleteCategory', cat_id=item.id)}}" class="btn btn-danger btn-sm">Delete</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content -->
+</div>
+<!-- /.content-wrapper -->
+
+<!-- Main Footer -->
+
+{% include "admin/includes/footer.html" %}
+<script src="{{url_for('static', filename='admin/plugins/datatables/jquery.dataTables.min.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js')}}"></script>
+<script
+    src="{{url_for('static', filename='admin/plugins/datatables-responsive/js/dataTables.responsive.min.js')}}"></script>
+<script
+    src="{{url_for('static', filename='admin/plugins/datatables-responsive/js/responsive.bootstrap4.min.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/datatables-buttons/js/dataTables.buttons.min.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/datatables-buttons/js/buttons.bootstrap4.min.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/jszip/jszip.min.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/pdfmake/pdfmake.min.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/pdfmake/vfs_fonts.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/datatables-buttons/js/buttons.html5.min.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/datatables-buttons/js/buttons.print.min.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/datatables-buttons/js/buttons.colVis.min.js')}}"></script>
+<script>
+    $(function () {
+        $("#example1").DataTable({
+            "responsive": true, "lengthChange": false, "autoWidth": false,
+            "buttons": ["copy", "csv", "excel", "pdf", "print"],
+            "paging": true,
+            "lengthChange": false,
+            "searching": false,
+            "ordering": false,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true,
+        }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+    });
+
+    const warning = () => {
+        let answer = confirm('Are You Sure You Want To Delete This Category? All The Products Related To This Category will also be deleted')
+        return answer ? true :  false;
+    }
+</script>
