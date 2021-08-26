@@ -1,6 +1,7 @@
 {% include "user/includes/header.html" %}
     
 {% include "user/includes/navbar.html" %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
         
         <!-- End of Header -->
 
@@ -107,8 +108,10 @@
         <!-- End of Main -->
 
 {% include "user/includes/footer.html" %}
+<script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 <script>
-	const addToCart = (productId) => {
+	var notyf = new Notyf();
+    const addToCart = (productId) => {
 		let quantity = $('.prodQuantity').val();
 		$.ajax({
 			url: "{{url_for('addToCart')}}",
@@ -135,11 +138,14 @@
 				if(data.cartItems) {
 					$('.cartCount').html(data.cartItems)
 				}
+                notyf.success('Item Added To Cart')
 			},
 			error: function (data) {
 				$(`.addToCart${productId}`).removeProp('disabled')
 				$(`.addToCart${productId}`).val('Add To Cart');
 				console.log(data);
+                notyf.error('Failed to add items to cart')
+
 			}
 		})
 	};

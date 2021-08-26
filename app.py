@@ -1,5 +1,5 @@
+from models.Address import Addresses
 import os
-import re
 from flask import Flask, json, jsonify, request, g, render_template, session, url_for, flash
 import jwt
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -18,6 +18,9 @@ from slugify import slugify
 import random
 import uuid
 import requests
+
+import razorpay
+client = razorpay.Client(auth=("rzp_test_ZYBtGSHw7kLS8W", "TyX1QAFi9fKr8YVrz3MiO0sw"))
 
 # ! Init App
 app = Flask(__name__)
@@ -377,6 +380,26 @@ def deleteProduct(slug):
         flash('Some Exception Occured.' ,'danger')
         return redirect(url_for('addProduct'))
 
+@app.route("/admin/orders/", methods=["GET"])
+@checkAdmin
+def viewOrder():
+    orders = db.session.query(Orders, Addresses).join(Addresses, Orders.address_id == Addresses.id).all()
+    return render_template('admin/viewOrder.html', orders=orders, active='viewOrder',  title='View Orders')
+
+@app.route("/admin/order/update/<string:orderId>/", methods=["GET", "POST"])
+@checkAdmin
+def updateOrder(orderId):
+    getOrder = Orders.query.filter_by(order_id=orderId).first()
+    if request.method == "GET":
+        if getOrder is not None:
+            return render_template('admin/updateOrder.html', order=getOrder, title='Update Orders')
+        else:
+            return redirect(url_for('viewOrder'))
+    else:
+        status = request.form.get('order_status')
+        getOrder.status = status
+        db.session.commit()
+        return render_template('admin/updateOrder.html', order=getOrder, title='Update Orders', success="Status Updated Successfully")
 # ! ----------------------------------------------------------------------------------
 # ! --------------------------------USER ROUTE----------------------------------------
 # ! ----------------------------------------------------------------------------------
@@ -388,21 +411,13 @@ def inject_category():
 
 @app.route("/", methods=['GET'])
 def home():
-    # allProducts = Products.query.order_by(Products.id.desc()).all()
     products = db.session.query(Products, categories).join(categories, Products.category_id == categories.id).all()
-    print(products)
-    # Products.query(categories.name.label("category_name"), categories.image.label("category_img"), categories.created_at.label("category_name")).join(categories, Products.category_id == categories.id).order_by(Products.id).all()
-    # products = db.session.execute('SELECT products.*, categories.id, categories.name AS cat_name FROM products INNER JOIN categories ON products.category_id=categories.id')
-    # Products.query.join(categories, Products.category_id == categories.id).order_by(Products.id).first()
-    # print(products.first().cat_name)
-    # ? -: Get User Cart Details If logged In
-    # TODO -: Login, signup and cart page
-    # TODO -: Add To Cart
-    # TODO -: Individual Product Page
-    # TODO -: Checkout Page
-    # TODO -: Payment Gateway Integration
-
     return render_template('user/index.html', title="Home || Ecom", active='home', products=products)
+
+@app.route("/products/categories/<string:category_id>", methods=['GET'])
+def fetchProductByCategory(category_id):
+    products = db.session.query(Products, categories).filter_by(category_id=category_id).join(categories, Products.category_id == categories.id).all()
+    return render_template('user/singleCat.html', title="Categories || Ecom", active='categories', products=products)
 
 # ! User Authentication Routes
 
@@ -410,7 +425,7 @@ def home():
 def login():
     if request.method == 'GET':
         if "token" in session:
-            return redirect('home')
+            return redirect(url_for('home'))
         else:
             return render_template('user/login.html', title="Login")
     else:
@@ -599,6 +614,110 @@ def addToCart():
         print(coreError)
         return jsonify({ "error": "Sorry! Something went wrong."}), 500
 
+@app.route("/api/cart/change", methods=["POST"])
+@checkApiAuth
+def cartManipulation():
+    try:
+        payload = request.json
+        print(payload)
+        if all (k in payload for k in ("cartId","operationType")):
+            findCart = Cart.query.filter_by(id=payload["cartId"], user_id=g.user['id']).first()
+            if findCart:
+                findProduct = Products.query.get(findCart.product_id)
+                if payload["operationType"] == 'plus':
+                    findCart.qty = findCart.qty + 1
+                    findCart.amount =  int(findCart.qty) * float(findProduct.price)
+                    payload['amount'] = findCart.amount
+                    payload['quantity'] = findCart.qty
+                    payload['message'] = "Cart Changed Successfully"
+
+                elif payload["operationType"] == 'minus':
+                    if findCart.qty == 1:
+                        return jsonify({ "message": "Minimum Threshold exceeded." }), 400
+                    else:
+                        findCart.qty = findCart.qty - 1
+                        findCart.amount =  int(findCart.qty) * float(findProduct.price)
+                        payload['amount'] = findCart.amount
+                        payload['quantity'] = findCart.qty
+                        payload['message'] = "Cart Changed Successfully"
+                    
+
+                elif payload["operationType"] == 'remove':
+                    db.session.delete(findCart)
+                    payload['message'] = "Product Successfully Removed From Cart."
+                else:
+                    return jsonify({ "message": "Invalid Operation Type." }), 500
+            else:
+                return jsonify({ "message": "Failed To Add. No Product Exist With That id." }), 500
+            
+            try:
+                db.session.commit()
+                # send updated cart amount and cart count
+                cart = db.session.query(Cart, Products).filter_by(user_id=g.user['id']).join(Products, Products.id == Cart.product_id).all()
+                total = sum([item['Cart'].amount for item in cart])
+                cartCount = Cart.query.filter_by(user_id = g.user['id']).count()
+                payload['total'] = total
+                payload['cartCount'] = cartCount
+                return payload, 200
+            except Exception as e:
+                print(e)
+                return jsonify({ "error": "Sorry! Something went wrong while adding to cart."}), 500
+        else:
+            return jsonify({"error": "Invalid Data. Please Check Again."}), 400
+    except Exception as coreError:
+        print(coreError)
+        return jsonify({ "error": "Sorry! Something went wrong."}), 500
+
+@app.route("/api/order/create", methods=["POST"])
+@checkApiAuth
+def createOrder():
+    try:
+        payload = request.json
+        print(payload)
+        if all (k in payload for k in ("order_id","payment_method","first-name", "last-name","address1", "city", "state", "zip", "phone", "email-address")):
+            getOrder = Orders.query.filter_by(order_id=payload['order_id'], status='stage').order_by(Orders.id.desc()).first()
+            if(getOrder is not None):
+                newAddress = Addresses(user_id=g.user['id'], firstName=payload['first-name'], lastName=payload['last-name'], address=payload['address1'], city=payload['city'], phone=payload['phone'], state=payload['state'], pincode=payload['zip'], email=payload['email-address'], created_at = datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+                db.session.add(newAddress)
+                db.session.commit()
+                if newAddress is not None:
+                    getOrder.address_id = newAddress.id
+                    getOrder.payment_method = payload['payment_method']
+                else:
+                    getOrder.payment_method = payload['payment_method']
+                print(getOrder)
+                if payload['payment_method'].lower() == 'cod':
+                    # proceed to order
+                    getOrder.status = 'processing'
+                    getOrder.address_id = newAddress.id
+                    # delete cart of user
+                    userCart = Cart.query.filter_by(user_id = g.user['id']).delete()
+                    db.session.commit()
+                    return jsonify({ "message": "Order Placed Successfully", "order_id": payload['order_id'], "status": 200 }), 200
+                else:
+                    return jsonify({ "message": "Order Placed Successfully", "order_id": payload['order_id'], "amount" : getOrder.total, "status": 201 }), 201
+
+                    # generate rzrp
+                # check payment method
+                # if online then generate rzrp token
+            else:
+                return jsonify({"error": "Something isnt right."}), 500
+
+        else:
+            return jsonify({"error": "Invalid Data. Please send complete details."}), 400
+    except Exception as coreError:
+        print(coreError)
+        return jsonify({ "error": "Sorry! Something went wrong."}), 500
+
+
+
+
+@app.route('/cart/', methods=['GET'])
+@checkAuth
+def cart():
+    cart = db.session.query(Cart, Products).filter_by(user_id=g.user['id']).join(Products, Products.id == Cart.product_id).all()
+    total = sum([item['Cart'].amount for item in cart])
+    return render_template('user/cart.html', title='Cart', cart=cart, cartTotal = total)
 
 
 # ! Product Route
@@ -609,6 +728,77 @@ def viewProduct(slug):
     if(product):
         # render page
         return render_template('user/product.html', title = product.name, product=product)
+    else:
+        # render 404 page
+        return ""
+
+@app.route("/checkout/", methods=['GET', 'POST'])
+@checkAuth
+def checkout():
+    if request.method == 'GET':
+        return render_template('user/checkout.html', title = 'Checkout')
+    else:
+        # ! Fetch Cart Details
+        try:
+            userDetails = g.user
+            print(userDetails['id'])
+            checkIfStageExist = Orders.query.filter_by(user_id=userDetails['id'], status="stage").order_by(Orders.id.desc()).first()
+            if checkIfStageExist is None:
+                allCart = Cart.query.filter_by(user_id=userDetails['id']).all()
+                if allCart:
+                    print(allCart)
+                    cartList = []
+                    allTotal = float(0)
+                    for list in allCart:
+                        name = Products.query.get(list.product_id).name
+                        price = Products.query.get(list.product_id).price
+                        allTotal += list.amount
+                        cartList.append({ "id": list.id, "qty": list.qty, "amount": list.amount, "name": name, "price": price ,"created_at": list.created_at })
+                        
+                    # ! Get Total amount & create Order Obj
+                    order_id = 'UU'+ str(uuid.uuid4().hex[:8])
+                    orderObj = { "user_id": userDetails['id'], "order": cartList, "total": allTotal, "status": "stage", "payment_method": "COD", "order_id": order_id.upper() }
+
+                    # ! Create Order
+                    newOrder = Orders(order_id=order_id, user_id=userDetails['id'], order=json.dumps(cartList), amount=orderObj['total'], status=orderObj['status'], payment_method = orderObj['payment_method'], created_at = datetime.now().strftime("%d/%m/%Y %H:%M:%S"))
+                    db.session.add(newOrder)
+                    db.session.commit()
+                    if newOrder:
+                        # # ! Empty user's cart after a successful order
+                        # deleteCart = Cart.__table__.delete().where(Cart.user_id == userDetails['id'])
+                        # db.session.execute(deleteCart)
+                        # db.session.commit()
+                        address = Addresses.query.filter_by(user_id=userDetails['id'])
+                        return render_template('user/checkout.html', orders=orderObj, title='Checkout', address=address)
+                    else:
+                        return render_template('user/checkout.html', error='Sorry! Something went wrong while creating order', title='Checkout')
+                else:
+                    return render_template('user/checkout.html', error='Have you lost your way?', title='Checkout')
+            else:
+                print('order exists')
+                orderObj = { "user_id": checkIfStageExist.user_id, "order": json.loads(checkIfStageExist.order), "total": checkIfStageExist.amount, "status": checkIfStageExist.status, "payment_method": checkIfStageExist.payment_method, "order_id": checkIfStageExist.order_id }
+                address = Addresses.query.filter_by(user_id=userDetails['id'])
+                return render_template('user/checkout.html', orders=orderObj, title='Checkout', address=address)
+        except Exception as coreError:
+            print(coreError)
+            return render_template('user/checkout.html', error='Sorry! Some Flask Exception Occured', title='Checkout')
+
+        # TODO Generate Signature(PG)
+
+# ! Order Route
+@app.route("/orders/", methods=['GET'])
+@checkAuth
+def orders():
+    orders = db.session.query(Orders, Addresses).join(Addresses, Orders.address_id == Addresses.id).all()
+    return render_template('user/my-orders.html', title='My Orders', orders=orders)
+
+@app.route("/order/success/<string:orderId>/", methods=['GET'])
+@checkAuth
+def success(orderId):
+    order = Orders.query.filter_by(order_id=orderId).first()
+    if(order):
+        # render page
+        return render_template('user/order.html', title = "Order", order=order)
     else:
         # render 404 page
         return ""

@@ -41,7 +41,7 @@ def checkAuth(func):
                     user = jwt.decode(session['token'], jwt_secret, algorithms=["HS256"])
                     foundUser = users.query.get(user['id'])
                     if foundUser:
-                        if foundUser.usertype == "user":
+                        if foundUser.usertype == "users":
                             g.user = { "id": foundUser.id, "email": foundUser.email, "usertype": foundUser.usertype }
                             return func(*args, **kwargs)
                         else:
@@ -49,6 +49,7 @@ def checkAuth(func):
                             flash('Unauthorized User.' ,'danger')
                             return redirect(url_for('login'))
                 except Exception as coreError:
+                    print(url_for('login'))
                     print(coreError)
                     flash('Sorry! Something Went Wrong....' ,'danger')
                     return redirect(url_for('login'))
@@ -56,7 +57,8 @@ def checkAuth(func):
                 flash('Signin to enjoy our services' ,'danger')
                 return redirect(url_for('login'))
         except Exception as e:
-            flash('Some Exception Occured' ,'danger')
+            print(e)
+            print('Some Exception Occured')
             return redirect('')
     return authChecker
 

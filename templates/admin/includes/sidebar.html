@@ -47,6 +47,23 @@
               </li>
             </ul>
           </li>
+          <li class="nav-item {{ 'menu-open' if (active == 'addCat' or active == 'editCat') else '' }}">
+            <a href="javascript:void(0)" class="nav-link {{ 'active' if (active == 'addCat' or active == 'editCat') else '' }}">
+              <i class="nav-icon fas fa-copy"></i>
+              <p>
+                Orders
+                <i class="fas fa-angle-left right"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{url_for('viewOrder')}}" class="nav-link  {{ 'active' if active == 'viewOrder' else '' }}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>Manage Orders</p>
+                </a>
+              </li>
+            </ul>
+          </li>
           <li class="nav-item {{ 'menu-open' if (active == 'addProd' or active == 'editProd') else '' }}">
             <a href="javascript:void(0)" class="nav-link {{ 'active' if (active == 'addProd' or active == 'editProd') else '' }}">
               <i class="nav-icon fas fa-copy"></i>

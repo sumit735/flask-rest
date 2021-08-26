@@ -1,0 +1,99 @@
+{% include "user/includes/header.html" %}
+    
+{% include "user/includes/navbar.html" %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+        
+        <!-- End of Header -->
+
+        <main class="main">
+            <div class="page-content">
+                <section class="product-wrapper mb-10 pb-8 appear-animate">
+                    <div class="container">
+                        
+                        <div class="row grid products-grid mb-2 mt-4" id="products-grid" data-grid-options="{
+                            'masonry': {
+                                'columnWidth': ''
+                            }
+                        }">
+                            {% if products|length > 0 %}
+                                {% for product in products %}
+                                    {% set imageList = product['Products'].image.split(',') %}
+                                    {% set productId = product['Products'].id %}
+                                    <div class="col-md-3 col-sm-4 col-6 grid-item electronics essentials">
+                                        <div class="product text-center">
+                                            <figure class="product-media" style="background-color: #f9f9f9;">
+                                                <a href="{{ url_for('viewProduct', slug = product['Products'].slug) }}">
+                                                    <img src="{{url_for('static', filename=imageList[0])}}" alt="product" width="280"
+                                                        height="315">
+                                                </a>
+                                                <div class="product-action">
+                                                    <a href="javascript:void(0)" onclick="addToCart('{{ productId }}');" class="btn-product addToCart{{ productId }}" title="Click To Add To Cart">Add To Cart</a>
+                                                </div>
+                                            </figure>
+                                            <div class="product-details">
+                                                <div class="product-cat">
+                                                    <a href="shop-grid-3cols.html">{{ product['categories'].name }}</a>
+                                                </div>
+                                                <h3 class="product-name">
+                                                    <a href="{{ url_for('viewProduct', slug = product['slug']) }}">{{ product['Products'].name }}</a>
+                                                </h3>
+                                                <div class="product-price">
+                                                    <span class="price">&#8377; {{ product['Products'].price }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <p class="alert alert-danger text-white">Sorry! No Product Available In This Category.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+        <!-- End of Main -->
+
+{% include "user/includes/footer.html" %}
+<script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+<script>
+	var notyf = new Notyf();
+    const addToCart = (productId) => {
+		let quantity = $('.prodQuantity').val();
+		$.ajax({
+			url: "{{url_for('addToCart')}}",
+			type: 'POST',
+			dataType: 'json',
+			contentType: 'application/json',
+			data: JSON.stringify({
+				'product_id': productId,
+				'quantity': quantity
+			}),
+			beforeSend: function() {
+				$(`.addToCart${productId}`).prop('disabled', true)
+				$(`.addToCart${productId}`).val('Please Wait.');
+			},
+			statusCode: {
+				401: function() { 
+					window.location.href = "{{ url_for('login') }}";
+				}
+			},
+			success: function (data) {
+				$(`.addToCart${productId}`).removeProp('disabled')
+				$(`.addToCart${productId}`).val('Add To Cart');
+				console.log(data);
+				if(data.cartItems) {
+					$('.cartCount').html(data.cartItems)
+				}
+                notyf.success('Item Added To Cart')
+			},
+			error: function (data) {
+				$(`.addToCart${productId}`).removeProp('disabled')
+				$(`.addToCart${productId}`).val('Add To Cart');
+				console.log(data);
+                notyf.error('Failed to add items to cart')
+
+			}
+		})
+	};
+</script>

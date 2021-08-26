@@ -1,0 +1,76 @@
+{% include "admin/includes/header.html" %}
+<!-- DataTables -->
+<link rel="stylesheet"
+    href="{{url_for('static', filename='admin/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css')}}">
+<link rel="stylesheet"
+    href="{{url_for('static', filename='admin/plugins/datatables-responsive/css/responsive.bootstrap4.min.css')}}">
+<link rel="stylesheet"
+    href="{{url_for('static', filename='admin/plugins/datatables-buttons/css/buttons.bootstrap4.min.css')}}">
+<link rel="stylesheet" href="https://cdn.rawgit.com/sachinchoolur/lightgallery.js/master/dist/css/lightgallery.css"  />
+<script src="https://cdn.rawgit.com/sachinchoolur/lightgallery.js/master/dist/js/lightgallery.js" ></script>
+<script src="https://cdn.rawgit.com/sachinchoolur/lg-zoom.js/master/dist/lg-zoom.js"></script>
+<!-- Main Sidebar Container -->
+{% include "admin/includes/sidebar.html" %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+        
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+            <div class="col-md-12">
+                <div class="card card-secondary mb-4">
+                    <div class="card-header">
+                        <h3 class="card-title">{{activePage}}</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if error  %}
+                            <p class="col-md-6 alert alert-danger">{{ error }}</p>
+                        {% endif %}
+                        {% if success  %}
+                            <p class="col-md-6 alert alert-success">{{ success }}</p>
+                        {% endif %}
+                        <form method="POST" enctype="multipart/form-data">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="form-group">
+                                        <label for="cat">Choose Category</label>
+                                        <select required class="form-control" name="order_status" id="cat">
+                                            <option selected value="">Select Order Status</option>
+                                            <option {{ "selected='selected'" if order.status == 'processing' else "" }} value="processing">Processing</option>
+                                            <option {{ "selected='selected'" if order.status == 'shipped' else "" }} value="shipped">Shipped</option>
+                                            <option {{ "selected='selected'" if order.status == 'cancelled' else "" }} value="cancelled">Cancelled</option>
+                                            <option {{ "selected='selected'" if order.status == 'delivered' else "" }} value="delivered">Delivered</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <label for="">Edit Product</label><br>
+                                    <input type="submit" class="btn btn-info" value="Edit Product">
+                                </div>
+                            </div>
+                            
+                        </form>
+
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content -->
+</div>
+<!-- /.content-wrapper -->
+
+<!-- Main Footer -->
+
+{% include "admin/includes/footer.html" %}

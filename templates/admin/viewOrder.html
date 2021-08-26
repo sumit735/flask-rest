@@ -1,0 +1,159 @@
+{% include "admin/includes/header.html" %}
+<!-- DataTables -->
+<link rel="stylesheet"
+    href="{{url_for('static', filename='admin/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css')}}">
+<link rel="stylesheet"
+    href="{{url_for('static', filename='admin/plugins/datatables-responsive/css/responsive.bootstrap4.min.css')}}">
+<link rel="stylesheet"
+    href="{{url_for('static', filename='admin/plugins/datatables-buttons/css/buttons.bootstrap4.min.css')}}">
+<!-- Main Sidebar Container -->
+{% include "admin/includes/sidebar.html" %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <div class="content-header">
+
+    </div>
+    <!-- /.content-header -->
+
+    <!-- Main content -->
+    <div class="content">
+        <div class="container-fluid">
+            <div class="col-md-12">
+                <!-- /.card -->
+
+                <div class="card card-secondary">
+                    <div class="card-header">
+                        <h3 class="card-title">View Orders</h3>
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body">
+                        <table id="example1" class="table table-bordered table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Address Details</th>
+                                    <th>Order Details</th>
+                                    <th>Total Amount</th>
+                                    <th>Payment Method</th>
+                                    <th>Order Status</th>
+                                    <th>Created At</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in orders %}
+                                {% set orderDetails = order['Orders'] %}
+                                {% set addressDetails = order['Addresses'] %}
+                                <tr>
+                                    <td>{{ orderDetails.order_id }}</td>
+                                    <td>{{ addressDetails.address }}, {{ addressDetails.city }}, {{ addressDetails.state
+                                        }}, {{ addressDetails.pincode }}</td>
+                                    <td><button onclick="viewOrders(`{{ orderDetails.order }}`)"
+                                            class="btn btn-success btn-sm">Order Details</button></td>
+                                    <td>{{ orderDetails.amount }}</td>
+                                    <td>
+                                        <p class="badge badge-warning">{{ orderDetails.status }}</p>
+                                    </td>
+                                    <td>{{ orderDetails.payment_method }}</td>
+                                    <td>{{ orderDetails.created_at }}</td>
+                                    <td>
+                                        <a href="{{url_for('updateOrder', orderId=orderDetails.order_id)}}" class="btn btn-secondary btn-sm">Update</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+        <!-- /.container-fluid -->
+    </div>
+    <!-- /.content -->
+</div>
+<!-- /.content-wrapper -->
+
+<!-- Main Footer -->
+<div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Modal title</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table id="example1" class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>Product Name</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tproduct">
+
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% include "admin/includes/footer.html" %}
+<script src="{{url_for('static', filename='admin/plugins/datatables/jquery.dataTables.min.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js')}}"></script>
+<script
+    src="{{url_for('static', filename='admin/plugins/datatables-responsive/js/dataTables.responsive.min.js')}}"></script>
+<script
+    src="{{url_for('static', filename='admin/plugins/datatables-responsive/js/responsive.bootstrap4.min.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/datatables-buttons/js/dataTables.buttons.min.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/datatables-buttons/js/buttons.bootstrap4.min.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/jszip/jszip.min.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/pdfmake/pdfmake.min.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/pdfmake/vfs_fonts.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/datatables-buttons/js/buttons.html5.min.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/datatables-buttons/js/buttons.print.min.js')}}"></script>
+<script src="{{url_for('static', filename='admin/plugins/datatables-buttons/js/buttons.colVis.min.js')}}"></script>
+<script>
+    $(function () {
+        $("#example1").DataTable({
+            "responsive": true, "lengthChange": false, "autoWidth": false,
+            "buttons": ["copy", "csv", "excel", "pdf", "print"],
+            "paging": true,
+            "lengthChange": false,
+            "searching": false,
+            "ordering": false,
+            "info": true,
+            "autoWidth": false,
+            "responsive": true,
+        }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+    });
+    function viewOrders(details) {
+        details = JSON.parse(details);
+        $('#tproduct').empty()
+        details.forEach(order => {
+            console.log(order);
+            $('#tproduct').append(`
+               <tr>
+                   <td>${order.name}</td>
+                   <td>${order.price}</td>
+                   <td>${order.qty}</td>
+                   <td>${order.amount}</td>
+               </tr>
+            `)
+        });
+        $('.modal').modal('toggle')
+
+    }
+</script>

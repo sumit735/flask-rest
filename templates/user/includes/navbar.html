@@ -31,16 +31,16 @@
                         <li class="{{ 'active' if active == 'categories' else '' }}">
                             <a href="javascript:void(0)">Categories</a>
                             <ul>
-                                {% if categories %}
+                                {% if categories|length > 0 %}
                                     {% for item in categories %}
-                                        <li><a href="element-products.html">{{ item.name }}</a></li>
+                                        <li><a href="{{ url_for('fetchProductByCategory', category_id=item.id) }}">{{ item.name }}</a></li>
                                     {% endfor %}
                                 {% endif %}
                             </ul>
                         </li>
                         {% if cartCount is defined and cartCount|length %}
                             <li class="{{ 'active' if active == 'account' else '' }}">
-                                <a href="{{ url_for('home') }}">Account</a>
+                                <a href="{{ url_for('orders') }}">Orders</a>
                             </li>
                             
                         {% endif %}
@@ -55,7 +55,7 @@
             <div class="header-right">
                 {% if cartCount is defined and cartCount|length %}
                     <div class="dropdown cart-dropdown cart-offcanvas">
-                        <a href="#">
+                        <a href="{{ url_for('cart') }}">
                             <span class="cart-label d-lg-show">
                                 <span class="cart-name"><i class="fas fa-shopping-cart"></i></span>
                                 <span class="fa fa-stack-1x counter cartCount">{{ cartCount }}</span>

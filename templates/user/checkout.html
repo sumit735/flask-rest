@@ -1,0 +1,182 @@
+<link rel="stylesheet" type="text/css" href="{{url_for('static', filename='user/css/style.min.css')}}">
+{% include "user/includes/header.html" %}
+{% include "user/includes/navbar.html" %}
+
+<main class="main checkout">
+	<div class="page-content pt-7 pb-10 mb-10">
+
+		<div class="container mt-7">
+			{% if error %}
+				<p style='color: #fff' class="alert alert-danger">{{ error }}</p>
+			{% endif %}
+			<form method="post" id="placeOrder" class="form">
+				<input type="hidden" name="payment_method" class="payment_method" value="rzrp">
+				<input type="hidden" name="order_id" class="order_id" value="{{ orders.order_id }}">
+				<div class="row">
+					<div class="col-lg-7 mb-6 mb-lg-0 pr-lg-4">
+						<h3 class="title title-simple text-left text-uppercase">Billing Details</h3>
+						<div class="row">
+							<div class="col-xs-6">
+								<label>First Name *</label>
+								<input required type="text" class="form-control" name="first-name" required="" />
+							</div>
+							<div class="col-xs-6">
+								<label>Last Name *</label>
+								<input required type="text" class="form-control" name="last-name" required="" />
+							</div>
+						</div>
+
+						<label>Street Address *</label>
+						<input required type="text" class="form-control" name="address1" required=""
+							placeholder="House number and street name" />
+						<div class="row">
+							<div class="col-xs-6">
+								<label>Town / City *</label>
+								<input required type="text" class="form-control" name="city" required="" />
+							</div>
+							<div class="col-xs-6">
+								<label>State *</label>
+								<input required type="text" class="form-control" name="state" required="" />
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-xs-6">
+								<label>Pincode *</label>
+								<input required type="text" class="form-control" name="zip" required="" />
+							</div>
+							<div class="col-xs-6">
+								<label>Phone *</label>
+								<input required type="text" class="form-control" min="10" max="10" name="phone" required="" />
+							</div>
+						</div>
+						<label>Email Address *</label>
+						<input required type="email" class="form-control" name="email-address" required="" />
+
+					</div>
+					<aside class="col-lg-5 sticky-sidebar-wrapper">
+						<div class="sticky-sidebar mt-1" data-sticky-options="{'bottom': 50}">
+							<div class="summary pt-5">
+								<h3 class="title title-simple text-left text-uppercase">Your Order</h3>
+								<table class="order-table">
+									<thead>
+										<tr>
+											<th>Product</th>
+											<th></th>
+										</tr>
+									</thead>
+									<tbody>
+										{% if "order" in orders %}
+											{% for order in orders['order'] %}
+												<tr>
+													<td class="product-name"> {{ order['name'] }} <span
+															class="product-quantity">×&nbsp; {{ order['qty'] }} </span></td>
+													<td class="product-total text-body">₹ {{ order['amount'] }}</td>
+												</tr>
+											{% endfor %}
+
+										{% endif %}
+
+										<tr class="summary-total">
+											<td class="pb-0">
+												<h4 class="summary-subtitle">Total</h4>
+											</td>
+											<td class=" pt-0 pb-0">
+												<p class="summary-total-price ls-s text-primary">₹ {{ orders['total'] }}
+												</p>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+								<div class="payment accordion radio-type">
+									<h4 class="summary-subtitle ls-m pb-3">Payment Methods</h4>
+									<div class="card">
+										<div class="card-header">
+											<a onclick="setPaymentMethod('rzrp')" href="#collapse1" class="collapse text-body text-normal ls-m">
+												Razorpay
+											</a>
+										</div>
+										<div id="collapse1" class="expanded" style="display: block;">
+											<div class="card-body ls-m">
+												Credit / Debit Card / EMI / UPI
+											</div>
+										</div>
+									</div>
+									<div class="card">
+										<div class="card-header">
+											<a onclick="setPaymentMethod('cod')" href="#collapse2" class="expand text-body text-normal ls-m">Cash
+												on delivery</a>
+										</div>
+										<div id="collapse2" class="collapsed">
+											<div class="card-body ls-m">
+												Pay with cash upon delivery.
+											</div>
+										</div>
+									</div>
+								</div>
+								<button type="submit" class="orderBtn btn btn-dark btn-rounded btn-order">Place
+									Order</button>
+							</div>
+						</div>
+					</aside>
+				</div>
+			</form>
+		</div>
+	</div>
+</main>
+{% include "user/includes/footer.html" %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+	function setPaymentMethod(value) {
+		$('.payment_method').val(value)
+	}
+	function getFormData($form){
+		var unindexed_array = $form.serializeArray();
+		var indexed_array = {};
+	
+		$.map(unindexed_array, function(n, i){
+			indexed_array[n['name']] = n['value'];
+		});
+	
+		return indexed_array;
+	}
+	let form = $('#placeOrder')
+	form.submit( function( e ) {
+		e.preventDefault();
+		let formData = getFormData(form)
+		$.ajax({
+			url: "{{url_for('createOrder')}}",
+			type: 'POST',
+			dataType: 'json',
+			contentType: 'application/json',
+			data: JSON.stringify(formData),
+			beforeSend: function() {
+				$('.orderBtn').attr('disabled', true)
+				$('.orderBtn').val('Please Wait.');
+			},
+			statusCode: {
+				401: function() { 
+					window.location.href = "{{ url_for('login') }}";
+				}
+			},
+			success: function(data) {
+				console.log(data);
+				if(data.status == 200) {
+					window.location.href = `/order/success/${data.order_id}`;
+					
+				} else if(data.status == 201) {
+					console.log('generate gateway');
+					console.log(data);
+				}
+			},
+			error: function(data) {
+				$('.orderBtn').removeAttr('disabled');
+				$('.orderBtn').val('PLACE ORDER');
+				Swal.fire({
+					icon: 'error',
+					confirmButtonColor: '#222222',
+					text: data.responseJSON.message || "something went wrong"
+				})
+			}
+		})
+	} )
+</script>

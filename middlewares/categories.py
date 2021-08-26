@@ -22,7 +22,6 @@ def getCat(func):
 def getCart(func):
     @wraps(func)
     def categoriesFetch(*args, **kwargs):
-        print('cart middleware executes')
         if "token" in session:
             try:
                 user = jwt.decode(session['token'], jwt_secret, algorithms=["HS256"])
